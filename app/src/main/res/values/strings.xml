@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Camera Dictionary</string>
+    <string name="taking_picture">Take picture</string>
+    <string name="welcome_text">Welcome to Camera Dictionary</string>
+    <string name="permission_denied">The Application does not have require permission</string>
+    <string name="failed_to_delete">Failed to delete file</string>
+    <string name="success_delete">Image is deleted</string>
+    <string name="load_previous_image">Load previous image</string>
+    <string name="google_translate">Google Translate</string>
+    <string name="detect_failed">No word occur.Please try again</string>
+    <string name="no_connection_available">No network available. Cannot translate</string>
+</resources>
