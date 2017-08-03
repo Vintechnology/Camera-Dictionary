@@ -106,7 +106,7 @@ public class CropView extends View {
                         break;
                     }
                 }
-                /*
+                /* may not need
                 if(!maxCropZone.contains(currentX,currentY) && modeFlag==NONE_FLAG)
                     return false;
                     */

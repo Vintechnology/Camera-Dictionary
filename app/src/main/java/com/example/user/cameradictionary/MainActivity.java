@@ -3,12 +3,14 @@ package com.example.user.cameradictionary;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -17,7 +19,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.View;
 import android.widget.ImageView;
@@ -32,14 +33,15 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE=1
-                                ,REQUEST_WRITE_PERMISSION=2;
+                                ,REQUEST_WRITE_PERMISSION=2
+                                ,REQUEST_PICK_IMAGE=3;
     private static final String FILE_SHARING_AUTHORITY="com.example.user.fileprovider";
     public static  final String APPLICATION_TAG="CAMERA_DICTIONARY";
     public static final String WORD_KEY="translate_key";
     private boolean remainCachedPhoto;
     private ImageView displayImageView;
     private CropView cropView;
-    private View takePictureButton,loadPreviousImage, welcomeView, backButton, translateButton;
+    private View takePictureButton,loadPreviousImage, welcomeView, backButton, translateButton, pickImageButton;
     private String mTempImagePath;
     private TextRecognizer textDetector;
 
@@ -106,11 +108,11 @@ public class MainActivity extends AppCompatActivity {
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED){
             ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_WRITE_PERMISSION);
         }else{
-            dispatchCameraIntent();
+            dispatchCameraCaptureIntent();
         }
     }
 
-    private void dispatchCameraIntent(){
+    private void dispatchCameraCaptureIntent(){
         Intent cameraIntent=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if(cameraIntent.resolveActivity(getPackageManager())!=null){
             File photoFile=null;
@@ -128,11 +130,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void dispatchPickImageIntent(){
+        Intent getPicIntent=new Intent(Intent.ACTION_PICK,MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(getPicIntent,REQUEST_PICK_IMAGE);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode==REQUEST_WRITE_PERMISSION){
             if(grantResults.length>0 && grantResults[0]==PackageManager.PERMISSION_GRANTED)
-                dispatchCameraIntent();
+                dispatchCameraCaptureIntent();
             else
                 Toast.makeText(this,R.string.permission_denied,Toast.LENGTH_SHORT).show();
         }else
@@ -147,7 +154,17 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 BitmapUtils.deleteTempFile(this,mTempImagePath);// !!!
             }
-        } else{
+        }else if (requestCode== REQUEST_PICK_IMAGE && resultCode==RESULT_OK){
+            Uri selectedImage=data.getData();
+            String[] filePathColumn={MediaStore.Images.Media.DATA};
+            Cursor c=getContentResolver().query(selectedImage,filePathColumn,null,null,null);
+            if(c!=null) {
+                int columnIndex = c.getColumnIndex(filePathColumn[0]);
+                String selectedFilePath = c.getString(columnIndex);
+                c.close();
+            }
+        }
+        else{
             super.onActivityResult(requestCode,resultCode,data);
         }
     }
