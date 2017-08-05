@@ -4,29 +4,17 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.util.SparseArray;
+import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.Toast;
-
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.text.TextBlock;
-import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,51 +25,39 @@ public class MainActivity extends AppCompatActivity {
                                 ,REQUEST_PICK_IMAGE=3;
     private static final String FILE_SHARING_AUTHORITY="com.example.user.fileprovider";
     public static  final String APPLICATION_TAG="CAMERA_DICTIONARY";
-    public static final String WORD_KEY="translate_key";
     private boolean remainCachedPhoto;
-    private ImageView displayImageView;
-    private CropView cropView;
-    private View takePictureButton,loadPreviousImage, welcomeView, backButton, translateButton, pickImageButton;
-    private String mTempImagePath;
-    private TextRecognizer textDetector;
+    private View takePictureButton,loadPreviousImage, pickImageButton;
+    private String mImagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        textDetector=new TextRecognizer.Builder(this).build();
-
-        displayImageView=(ImageView)findViewById(R.id.image_view);
-        cropView=(CropView)findViewById(R.id.crop_view);
         takePictureButton=findViewById(R.id.take_picture);
-        backButton=findViewById(R.id.back_button);
-        welcomeView=findViewById(R.id.welcome_text);
         loadPreviousImage=findViewById(R.id.get_previous_image);
-        translateButton=findViewById(R.id.translate_button);
+        pickImageButton=findViewById(R.id.pick_image_button);
 
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(remainCachedPhoto){
-                    BitmapUtils.deleteTempFile(MainActivity.this,mTempImagePath);
+                    BitmapUtils.deleteTempFile(MainActivity.this, mImagePath);
                     remainCachedPhoto=false;
                 }
                 startTakingPicture();
             }
         });
-        backButton.setOnClickListener(new View.OnClickListener() {
+        pickImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                backToHome();
+                dispatchPickImageIntent();
             }
         });
-        translateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                cropImageAndDisplayText();
-            }
-        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         checkForRemainCachedImage();
     }
 
@@ -92,13 +68,18 @@ public class MainActivity extends AppCompatActivity {
             if(tempCachedFiles.length>0) {
                 remainCachedPhoto=true;
                 loadPreviousImage.setVisibility(View.VISIBLE);
-                mTempImagePath = tempCachedFiles[0].getAbsolutePath();
+                mImagePath = tempCachedFiles[0].getAbsolutePath();
                 loadPreviousImage.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         processAndDisplayImage();
                     }
                 });
+                Log.d(APPLICATION_TAG,"file name: "+ mImagePath);
+                Log.d(APPLICATION_TAG,"parent: "+getExternalCacheDir().getAbsolutePath());
+            }else {
+                loadPreviousImage.setVisibility(View.GONE);
+                remainCachedPhoto=false;
             }
         }
     }
@@ -122,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                 ex.printStackTrace();
             }
             if(photoFile!=null) {
-                mTempImagePath=photoFile.getAbsolutePath();
+                mImagePath =photoFile.getAbsolutePath();
                 Uri photoUri= FileProvider.getUriForFile(this,FILE_SHARING_AUTHORITY,photoFile);
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT,photoUri);
                 startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
@@ -147,92 +128,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {//
         if(requestCode==REQUEST_IMAGE_CAPTURE){
             if(resultCode==RESULT_OK){
                 processAndDisplayImage();
             }else{
-                BitmapUtils.deleteTempFile(this,mTempImagePath);// !!!
+                BitmapUtils.deleteTempFile(this, mImagePath);
             }
         }else if (requestCode== REQUEST_PICK_IMAGE && resultCode==RESULT_OK){
             Uri selectedImage=data.getData();
             String[] filePathColumn={MediaStore.Images.Media.DATA};
             Cursor c=getContentResolver().query(selectedImage,filePathColumn,null,null,null);
-            if(c!=null) {
+            if(c!=null && c.moveToFirst()) {
                 int columnIndex = c.getColumnIndex(filePathColumn[0]);
-                String selectedFilePath = c.getString(columnIndex);
+                mImagePath = c.getString(columnIndex);
                 c.close();
+                processAndDisplayImage();
             }
-        }
-        else{
+        }else{
             super.onActivityResult(requestCode,resultCode,data);
         }
     }
 
     private void processAndDisplayImage(){
-        takePictureButton.setVisibility(View.GONE);
-        welcomeView.setVisibility(View.GONE);
-        loadPreviousImage.setVisibility(View.GONE);
-
-        translateButton.setVisibility(View.VISIBLE);
-        backButton.setVisibility(View.VISIBLE);
-        cropView.setVisibility(View.VISIBLE);
-        Bitmap returnImage=BitmapUtils.resampleImage(this,mTempImagePath);
-        displayImageView.setImageBitmap(returnImage);
-        Rect maxZone=BitmapUtils.getDrawableOnScreenRect(displayImageView.getImageMatrix()
-                                                        ,displayImageView.getDrawable());
-        cropView.setMaxCropZone(maxZone);
-    }
-
-    private void backToHome(){
-        displayImageView.setImageResource(android.R.color.transparent);
-
-        backButton.setVisibility(View.GONE);
-        cropView.setVisibility(View.GONE);
-        translateButton.setVisibility(View.GONE);
-
-        welcomeView.setVisibility(View.VISIBLE);
-        takePictureButton.setVisibility(View.VISIBLE);
-        BitmapUtils.deleteTempFile(this,mTempImagePath);
-    }
-
-    private void cropImageAndDisplayText(){
-        if(!networkAvailable()){
-            Snackbar.make(displayImageView,R.string.no_connection_available,Snackbar.LENGTH_LONG).show();
+        if(mImagePath ==null) {
+            Toast.makeText(this, R.string.directory_invalid, Toast.LENGTH_SHORT).show();
             return;
         }
-        Bitmap srcBitmap=((BitmapDrawable)displayImageView.getDrawable()).getBitmap();
-        Bitmap croppedBitmap=BitmapUtils.getCropImageBitmap(srcBitmap,cropView.getMaxCropZone(),cropView.getCropRect());
-
-        CharSequence detectedText=detectText(croppedBitmap);
-        if(detectedText.length()>0) {
-            FragmentManager fragManager=getSupportFragmentManager();
-            TranslateWebFragment webFragment=new TranslateWebFragment();
-            Bundle bundle = new Bundle();
-            bundle.putString(WORD_KEY, detectedText.toString());
-            webFragment.setArguments(bundle);
-            fragManager.beginTransaction().add(R.id.top_container,webFragment).commit();
-        }else{
-            Toast.makeText(this, R.string.detect_failed, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private CharSequence detectText (Bitmap imageBitmap){
-        Frame frame=new Frame.Builder().setBitmap(imageBitmap).build();
-        SparseArray<TextBlock> textSparseArray=textDetector.detect(frame);
-        StringBuilder builder=new StringBuilder();
-        for(int i=0;i<textSparseArray.size();++i){
-            TextBlock text=textSparseArray.valueAt(i);
-            builder.append(text.getValue());
-            builder.append(" ");
-        }
-        return builder;
-    }
-
-    public boolean networkAvailable(){
-        ConnectivityManager connectManager=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo networkState=connectManager.getActiveNetworkInfo();
-        return networkState!=null && networkState.isConnected();
+        Intent displayIntent=new Intent(this,DisplayActivity.class);
+        displayIntent.putExtra(DisplayActivity.FILE_PATH_EXTRA, mImagePath);
+        startActivity(displayIntent);
     }
 
 

@@ -10,9 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 /**
  * Created by user on 7/27/2017.
@@ -20,6 +18,7 @@ import android.widget.TextView;
 
 public class TranslateWebFragment extends Fragment {
     private static final String TRANSLATE_LINK_EN_VI="https://translate.google.com.vn/m/translate#en/vi/";
+    private static final String SEPARATOR="%20";
     private View backButton;
     private ProgressBar progressBar;
     private WebView webDisplay;
@@ -52,7 +51,7 @@ public class TranslateWebFragment extends Fragment {
             }
         });
         Bundle args=getArguments();
-        String word=args.getString(MainActivity.WORD_KEY);
+        String word=args.getString(DisplayActivity.WORD_KEY);
         updateTranslateURL(word);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -64,7 +63,8 @@ public class TranslateWebFragment extends Fragment {
     }
 
     private void updateTranslateURL(String orgWord){
-        webDisplay.loadUrl(TRANSLATE_LINK_EN_VI+orgWord);
+        String newWord=orgWord.replaceAll(" ",SEPARATOR);
+        webDisplay.loadUrl(TRANSLATE_LINK_EN_VI+newWord);
     }
 
     private void closeFragment(){

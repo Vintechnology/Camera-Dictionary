@@ -29,7 +29,14 @@ import java.util.Locale;
     }
 
     static boolean deleteTempFile(Context context, String filePath){
+        if(context.getExternalCacheDir()==null)
+            return false;
         File fileToDelete= new File(filePath);
+        String cachePath=context.getExternalCacheDir().getAbsolutePath();
+        String parentPath=fileToDelete.getParent();
+        if(!cachePath.equals(parentPath))
+            return false;
+
         boolean deleteSuccess=fileToDelete.delete();
         if(!deleteSuccess){
             Toast.makeText(context,R.string.failed_to_delete,Toast.LENGTH_SHORT).show();
@@ -71,8 +78,12 @@ import java.util.Locale;
         float scale=values[Matrix.MSCALE_X];
         int bitmapScaledWidth=(int)(scale*bitmapWidth+0.5f);
         int bitmapScaledHeight=(int)(scale*bitmapHeight+0.5f);
+
+        Log.d(MainActivity.APPLICATION_TAG,"transX:"+transX+" transY: "+transY);
+        Log.d(MainActivity.APPLICATION_TAG,"scaled : "+scale);
         Rect returnRect =new Rect();
         returnRect.set(transX,transY,transX+bitmapScaledWidth,transY+bitmapScaledHeight);
+        Log.d(MainActivity.APPLICATION_TAG,"top:"+returnRect.top+" bottom: "+returnRect.bottom+" left: "+returnRect.left+" right: "+returnRect.right);
 
         return returnRect;
     }

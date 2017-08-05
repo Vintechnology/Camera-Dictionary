@@ -3,16 +3,19 @@
     <string name="taking_picture">Take picture</string>
     <string name="pick_image">Load image from phone</string>
     <string name="welcome_text">Welcome to Camera Dictionary</string>
-    <string name="permission_denied">The Application does not have require permission</string>
+    <string name="permission_denied">The Application does not have required permission</string>
     <string name="failed_to_delete">Failed to delete file</string>
     <string name="success_delete">Image is deleted</string>
     <string name="load_previous_image">Load previous image</string>
     <string name="google_translate">Google Translate</string>
-    <string name="detect_failed">No word occur.Please try again</string>
+    <string name="detect_failed">No word occur.Please check again</string>
     <string name="no_connection_available">No network available. Cannot translate</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
     <string name="title_activity_display">Display Image</string>
     <string name="translate_option">Translate</string>
+    <string name="check_result_label">Check your result</string>
+    <string name="crop_instruction">Crop the text which you want to translate</string>
+    <string name="directory_invalid">File directory invalid. Please check again</string>
 </resources>
