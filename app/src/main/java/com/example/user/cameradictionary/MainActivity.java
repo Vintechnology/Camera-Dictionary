@@ -26,17 +26,19 @@ public class MainActivity extends AppCompatActivity {
     private static final String FILE_SHARING_AUTHORITY="com.example.user.fileprovider";
     public static  final String APPLICATION_TAG="CAMERA_DICTIONARY";
     private boolean remainCachedPhoto;
-    private View takePictureButton,loadPreviousImage, pickImageButton;
+    private View loadPreviousImage;
     private String mImagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        takePictureButton=findViewById(R.id.take_picture);
+        //init Views
+        View takePictureButton = findViewById(R.id.take_picture);
         loadPreviousImage=findViewById(R.id.get_previous_image);
-        pickImageButton=findViewById(R.id.pick_image_button);
+        View pickImageButton = findViewById(R.id.pick_image_button);
 
+        // set buttons onClickListener
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

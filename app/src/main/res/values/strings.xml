@@ -18,4 +18,7 @@
     <string name="check_result_label">Check your result</string>
     <string name="crop_instruction">Crop the text which you want to translate</string>
     <string name="directory_invalid">File directory invalid. Please check again</string>
+    <string name="recognizer_not_operational">Recognizer cannot work.</string>
+    <string name="low_on_storage">Device storage is full. Cannot download dependencies</string>
+    <string name="google_play_service_error">Your Google Play Service has some problem. This may make the app not working properly</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.example.user.cameradictionary;
 
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
@@ -8,6 +10,7 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
@@ -19,6 +22,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
@@ -30,7 +35,7 @@ public class DisplayActivity extends AppCompatActivity {
     private TextView resultLabel;
     private EditText resultText;
     private CropView cropView;
-    private View backButton, translateButton, checkButton;
+    private View translateButton;
     private TextRecognizer textRecognizer;
     private String imageFilePath;
 
@@ -46,9 +51,9 @@ public class DisplayActivity extends AppCompatActivity {
         resultLabel=(TextView)findViewById(R.id.result_label);
         displayImageView=(ImageView)findViewById(R.id.image_display);
         cropView=(CropView)findViewById(R.id.crop_view);
-        backButton=findViewById(R.id.back_button);
+        View backButton = findViewById(R.id.back_button);
         translateButton=findViewById(R.id.translate_button);
-        checkButton=findViewById(R.id.check_button);
+        View checkButton = findViewById(R.id.check_button);
         final FrameLayout mainContentLayout=(FrameLayout)findViewById(R.id.content);
 
         //get file path
@@ -89,8 +94,14 @@ public class DisplayActivity extends AppCompatActivity {
                 translate();
             }
         });
+        checkGoogleServicesIsAvailable();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        textRecognizer.release();
+    }
 
     // Buttons method
     private void exitActivity(){
@@ -98,21 +109,23 @@ public class DisplayActivity extends AppCompatActivity {
         finish();
     }
     private void translate(){
-        CharSequence result=resultText.getText();
-        if(countWhiteSpace(result)==result.length()){
-            Toast.makeText(this, R.string.detect_failed, Toast.LENGTH_SHORT).show();
-            return;
+        if(recognizerIsOperational()) {
+            CharSequence result = resultText.getText();
+            if (countWhiteSpace(result) == result.length()) {
+                Toast.makeText(this, R.string.detect_failed, Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!networkAvailable()) {
+                Snackbar.make(displayImageView, R.string.no_connection_available, Snackbar.LENGTH_LONG).show();
+                return;
+            }
+            Bundle args = new Bundle();
+            args.putString(WORD_KEY, result.toString());
+            TranslateWebFragment webFragment = new TranslateWebFragment();
+            webFragment.setArguments(args);
+            FragmentManager fm = getSupportFragmentManager();
+            fm.beginTransaction().add(R.id.container, webFragment).commit();
         }
-        if(!networkAvailable()){
-            Snackbar.make(displayImageView,R.string.no_connection_available,Snackbar.LENGTH_LONG).show();
-            return;
-        }
-        Bundle args=new Bundle();
-        args.putString(WORD_KEY,result.toString());
-        TranslateWebFragment webFragment=new TranslateWebFragment();
-        webFragment.setArguments(args);
-        FragmentManager fm=getSupportFragmentManager();
-        fm.beginTransaction().add(R.id.container,webFragment).commit();
     }
     private void checkResult(){
         Bitmap srcBitmap=((BitmapDrawable)displayImageView.getDrawable()).getBitmap();
@@ -125,12 +138,15 @@ public class DisplayActivity extends AppCompatActivity {
     private CharSequence detectText(Bitmap cropBitmap){
         Frame frame=new Frame.Builder().setBitmap(cropBitmap).build();
         SparseArray<TextBlock> detectResultArray=textRecognizer.detect(frame);
-        StringBuilder builder=new StringBuilder();
-        for(int i=0;i<detectResultArray.size();++i){
-            builder.append(detectResultArray.valueAt(i).getValue());
-            builder.append(" ");
+        StringBuffer buffer=new StringBuffer();
+        int size=detectResultArray.size();
+        for(int i=0;i<size;++i){
+            buffer.append(detectResultArray.valueAt(i).getValue());
+            Log.d(MainActivity.APPLICATION_TAG,"Language: "+detectResultArray.valueAt(i).getLanguage());
+            if(i+1<size)
+                buffer.append(" ");
         }
-        return builder;
+        return buffer;
     }
 
     private void accessCheckMode(CharSequence result){
@@ -144,7 +160,8 @@ public class DisplayActivity extends AppCompatActivity {
 
     private int countWhiteSpace(CharSequence org){
         int whiteSpace=0;
-        for(int i=0; i<org.length();++i){
+        int length=org.length();
+        for(int i=0; i<length;++i){
             if(org.charAt(i)==' ')
                 whiteSpace++;
         }
@@ -155,5 +172,32 @@ public class DisplayActivity extends AppCompatActivity {
         ConnectivityManager connectManager=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo networkState=connectManager.getActiveNetworkInfo();
         return networkState!=null && networkState.isConnected();
+    }
+
+    private boolean recognizerIsOperational(){
+        if(!textRecognizer.isOperational()){
+            IntentFilter lowStorageFilter= new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW);
+            boolean hasLowStorage=registerReceiver(null,lowStorageFilter)!=null;
+            Log.w(MainActivity.APPLICATION_TAG,getString(R.string.recognizer_not_operational));
+            if(hasLowStorage){
+                Log.w(MainActivity.APPLICATION_TAG,getString(R.string.low_on_storage));
+                Toast.makeText(this, R.string.low_on_storage, Toast.LENGTH_SHORT).show();
+            }else
+                Toast.makeText(this, R.string.recognizer_not_operational, Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    private void checkGoogleServicesIsAvailable(){
+        GoogleApiAvailability servicesAvailability=GoogleApiAvailability.getInstance();
+        int status= servicesAvailability.isGooglePlayServicesAvailable(getApplicationContext());
+        if(status!= ConnectionResult.SUCCESS){
+            if(servicesAvailability.isUserResolvableError(status)){
+                servicesAvailability.getErrorDialog(this,status,2404).show();
+            }else{
+                new AlertDialog.Builder(this).setMessage(R.string.google_play_service_error).show();
+            }
+        }
     }
 }

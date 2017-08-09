@@ -52,6 +52,7 @@ public class CropView extends View {
         final float scaleFactor=getResources().getDisplayMetrics().density;
         minGapInPixel=(int)(MIN_GAP_IN_DP*scaleFactor+0.5f);
         mCornerSquareArray=CornerSquare.createSquares(scaleFactor,4);
+
         cropRect=new Rect();
         maxCropZone=new Rect();
         startPoint=new Point();
@@ -192,7 +193,7 @@ public class CropView extends View {
         private static final int SQUARE_HALF_WIDTH_IN_DP=8;
         private static int halfWidthInPixel;
         private Point centerPoint;
-        public static CornerSquare[] createSquares(float density,int numberOfSquare){
+        static CornerSquare[] createSquares(float density, int numberOfSquare){
             halfWidthInPixel=(int)(density*SQUARE_HALF_WIDTH_IN_DP+0.5f);
             CornerSquare[] array=new CornerSquare[numberOfSquare];
             for(int i=0;i<numberOfSquare;++i){
@@ -203,11 +204,11 @@ public class CropView extends View {
         private CornerSquare(){
             centerPoint=new Point();
         }
-        public void draw(Canvas canvas,int x, int y,Paint squarePaint){
+        void draw(Canvas canvas, int x, int y, Paint squarePaint){
             centerPoint.set(x,y);
             canvas.drawRect(x-halfWidthInPixel,y-halfWidthInPixel,x+halfWidthInPixel,y+halfWidthInPixel,squarePaint);
         }
-        public boolean contains (int x,int y){
+        boolean contains(int x, int y){
             return Math.abs(x-centerPoint.x)<=halfWidthInPixel && Math.abs(y-centerPoint.y)<=halfWidthInPixel;
         }
     }
