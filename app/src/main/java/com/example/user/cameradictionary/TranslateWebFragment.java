@@ -17,9 +17,8 @@ import android.widget.ProgressBar;
  */
 
 public class TranslateWebFragment extends Fragment {
-    private static final String TRANSLATE_LINK_EN_VI="https://translate.google.com.vn/m/translate#en/vi/";
+    private static final String TRANSLATE_LINK="https://translate.google.com.vn/m/translate#";
     private static final String SEPARATOR="%20";
-    private View backButton;
     private ProgressBar progressBar;
     private WebView webDisplay;
     public TranslateWebFragment() {
@@ -31,7 +30,8 @@ public class TranslateWebFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View returnView=inflater.inflate(R.layout.translate_fragment_layout,container,false);
-        backButton=returnView.findViewById(R.id.image_button);
+        View backButton = returnView.findViewById(R.id.back_button);
+        View homeButton=returnView.findViewById(R.id.home_button);
         progressBar=(ProgressBar)returnView.findViewById(R.id.progressBar);
 
         webDisplay=(WebView)returnView.findViewById(R.id.web_view);
@@ -52,25 +52,50 @@ public class TranslateWebFragment extends Fragment {
         });
         Bundle args=getArguments();
         String word=args.getString(DisplayActivity.WORD_KEY);
-        updateTranslateURL(word);
+        int fromLanguageIndex=args.getInt(DisplayActivity.DETECT_LANGUAGE_INDEX_KEY);
+        int toLanguageIndex=args.getInt(DisplayActivity.TRANSLATE_LANGUAGE_INDEX_KEY);
+        String[] languageCodeArray=getResources().getStringArray(R.array.language_code_array);
+        String fromLanguageCode=languageCodeArray[fromLanguageIndex];
+        String toLanguageCode=languageCodeArray[toLanguageIndex];
+
+        String url=buildTranslateUrl(fromLanguageCode,toLanguageCode,word);
+        webDisplay.loadUrl(url);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 closeFragment();
             }
         });
+        homeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                backHome();
+            }
+        });
         return returnView;
     }
 
-    private void updateTranslateURL(String orgWord){
-        String newWord=orgWord.replaceAll(" ",SEPARATOR);
-        webDisplay.loadUrl(TRANSLATE_LINK_EN_VI+newWord);
+    private String buildTranslateUrl(String fromLanguageCode,String toLanguageCode,String translateWord){
+        StringBuilder builder=new StringBuilder();
+        String newWord=translateWord.replaceAll(" ",SEPARATOR);
+        builder.append(TRANSLATE_LINK)
+                .append(fromLanguageCode)
+                .append("/")
+                .append(toLanguageCode)
+                .append("/")
+                .append(newWord);
+        return builder.toString();
     }
 
     private void closeFragment(){
         FragmentTransaction fragTransaction=getActivity().getSupportFragmentManager().beginTransaction();
         fragTransaction.detach(this);
         fragTransaction.commit();
+    }
+
+    private void backHome(){
+        DisplayActivity activity=(DisplayActivity) getActivity();
+        activity.exitActivity();
     }
 
     // TODO: 7/28/2017 handle all fragment lifecycle

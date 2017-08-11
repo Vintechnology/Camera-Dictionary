@@ -16,9 +16,12 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,9 +31,17 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 
-public class DisplayActivity extends AppCompatActivity {
-    public static final String WORD_KEY="translate_key";
+import java.util.Arrays;
+
+public class DisplayActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+    public static final String WORD_KEY="translate_key"
+                                ,DETECT_LANGUAGE_INDEX_KEY="detect_language_index_key"
+                                ,TRANSLATE_LANGUAGE_INDEX_KEY="translate_language_index_key";
     public static final String FILE_PATH_EXTRA="DisplayActivity_filePath";
+    public static final int DETECT_ARRAY_LENGTH=16
+                            ,TRANSLATE_ARRAY_OFFSET=1;
+    private int detectLanguageIndex;
+    private int translateLanguageIndex;
     private ImageView displayImageView;
     private TextView resultLabel;
     private EditText resultText;
@@ -51,10 +62,9 @@ public class DisplayActivity extends AppCompatActivity {
         resultLabel=(TextView)findViewById(R.id.result_label);
         displayImageView=(ImageView)findViewById(R.id.image_display);
         cropView=(CropView)findViewById(R.id.crop_view);
-        View backButton = findViewById(R.id.back_button);
         translateButton=findViewById(R.id.translate_button);
-        View checkButton = findViewById(R.id.check_button);
-        final FrameLayout mainContentLayout=(FrameLayout)findViewById(R.id.content);
+
+        setupDetectAndTranslateSpinner();
 
         //get file path
         imageFilePath=getIntent().getStringExtra(FILE_PATH_EXTRA);
@@ -65,17 +75,11 @@ public class DisplayActivity extends AppCompatActivity {
         Log.d(MainActivity.APPLICATION_TAG,"After Bitmap height:"+imageBitmap.getHeight());
         displayImageView.setImageBitmap(imageBitmap);
         //set maximum crop zone for CropView
-        ViewTreeObserver layoutObserver=mainContentLayout.getViewTreeObserver();
-        layoutObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                mainContentLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                Rect imageOnScreenRect=BitmapUtils.getDrawableOnScreenRect(displayImageView.getImageMatrix()
-                        ,displayImageView.getDrawable());
-                cropView.setMaxCropZone(imageOnScreenRect);
-            }
-        });
+        setCropBoundaryWhenDoneDrawingView();
         //set buttons listener
+
+        View backButton = findViewById(R.id.back_button);
+        View checkButton = findViewById(R.id.check_button);
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,14 +108,14 @@ public class DisplayActivity extends AppCompatActivity {
     }
 
     // Buttons method
-    private void exitActivity(){
-        BitmapUtils.deleteTempFile(this,imageFilePath);
+    public void exitActivity(){
+        BitmapUtils.deleteIfIsTempFile(this,imageFilePath);
         finish();
     }
     private void translate(){
         if(recognizerIsOperational()) {
             CharSequence result = resultText.getText();
-            if (countWhiteSpace(result) == result.length()) {
+            if(isBlankText(result)) {
                 Toast.makeText(this, R.string.detect_failed, Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -119,8 +123,7 @@ public class DisplayActivity extends AppCompatActivity {
                 Snackbar.make(displayImageView, R.string.no_connection_available, Snackbar.LENGTH_LONG).show();
                 return;
             }
-            Bundle args = new Bundle();
-            args.putString(WORD_KEY, result.toString());
+            Bundle args=createTranslateDataBundle(result);
             TranslateWebFragment webFragment = new TranslateWebFragment();
             webFragment.setArguments(args);
             FragmentManager fm = getSupportFragmentManager();
@@ -199,5 +202,66 @@ public class DisplayActivity extends AppCompatActivity {
                 new AlertDialog.Builder(this).setMessage(R.string.google_play_service_error).show();
             }
         }
+    }
+
+    private void setupDetectAndTranslateSpinner(){
+        String[] languageArray=getResources().getStringArray(R.array.language_array);
+
+        Spinner detectLanguageSpinner=(Spinner)findViewById(R.id.detect_language_spinner);
+        ArrayAdapter<String> detectSpinnerAdapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_item
+                ,Arrays.copyOfRange(languageArray,0,DETECT_ARRAY_LENGTH));
+        detectSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        detectLanguageSpinner.setAdapter(detectSpinnerAdapter);
+        detectLanguageSpinner.setOnItemSelectedListener(this);
+
+        Spinner translateLanguageSpinner=(Spinner)findViewById(R.id.translate_language_spinner);
+        ArrayAdapter<String> translateSpinnerAdapter=new ArrayAdapter<>(this,android.R.layout.simple_spinner_item
+                ,Arrays.copyOfRange(languageArray,TRANSLATE_ARRAY_OFFSET,languageArray.length));
+        translateSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        translateLanguageSpinner.setAdapter(translateSpinnerAdapter);
+        translateLanguageSpinner.setOnItemSelectedListener(this);
+    }
+
+    private void setCropBoundaryWhenDoneDrawingView(){
+        final FrameLayout mainContentLayout=(FrameLayout)findViewById(R.id.content);
+        ViewTreeObserver layoutObserver=mainContentLayout.getViewTreeObserver();
+        layoutObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mainContentLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                Rect imageOnScreenRect=BitmapUtils.getDrawableOnScreenRect(displayImageView.getImageMatrix()
+                        ,displayImageView.getDrawable());
+                cropView.setMaxCropZone(imageOnScreenRect);
+            }
+        });
+    }
+
+    private boolean isBlankText(CharSequence result){
+        return countWhiteSpace(result) == result.length();
+    }
+
+    private Bundle createTranslateDataBundle(CharSequence result){
+        Bundle args = new Bundle();
+        args.putString(WORD_KEY, result.toString());
+        args.putInt(DETECT_LANGUAGE_INDEX_KEY,detectLanguageIndex);
+        args.putInt(TRANSLATE_LANGUAGE_INDEX_KEY,translateLanguageIndex);
+        return args;
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        switch(parent.getId()){
+            case R.id.translate_language_spinner:
+                translateLanguageIndex=position+TRANSLATE_ARRAY_OFFSET;
+                break;
+            case R.id.detect_language_spinner:
+                detectLanguageIndex=position;
+                break;
+        }
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 }

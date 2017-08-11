@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if(remainCachedPhoto){
-                    BitmapUtils.deleteTempFile(MainActivity.this, mImagePath);
+                    BitmapUtils.deleteIfIsTempFile(MainActivity.this, mImagePath);
                     remainCachedPhoto=false;
                 }
                 startTakingPicture();
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             if(resultCode==RESULT_OK){
                 processAndDisplayImage();
             }else{
-                BitmapUtils.deleteTempFile(this, mImagePath);
+                BitmapUtils.deleteIfIsTempFile(this, mImagePath);
             }
         }else if (requestCode== REQUEST_PICK_IMAGE && resultCode==RESULT_OK){
             Uri selectedImage=data.getData();

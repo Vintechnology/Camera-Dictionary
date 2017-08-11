@@ -28,7 +28,7 @@ import java.util.Locale;
         return File.createTempFile(imageFileName,".jpg",cacheDir);
     }
 
-    static boolean deleteTempFile(Context context, String filePath){
+    static boolean deleteIfIsTempFile(Context context, String filePath){
         if(context.getExternalCacheDir()==null)
             return false;
         File fileToDelete= new File(filePath);

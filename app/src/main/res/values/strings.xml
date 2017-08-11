@@ -21,4 +21,54 @@
     <string name="recognizer_not_operational">Recognizer cannot work.</string>
     <string name="low_on_storage">Device storage is full. Cannot download dependencies</string>
     <string name="google_play_service_error">Your Google Play Service has some problem. This may make the app not working properly</string>
+    <string-array name="language_array">
+        <item>Autodetect</item>
+        <item>Catalan</item>
+        <item>Danish</item>
+        <item>Dutch</item>
+        <item>English</item>
+        <item>Finnish</item>
+        <item>French</item>
+        <item>German</item>
+        <item>Hungarian</item>
+        <item>Italian</item>
+        <item>Polish</item>
+        <item>Portuguese</item>
+        <item>Romanian</item>
+        <item>Spanish</item>
+        <item>Swedish</item>
+        <item>Turkish</item>
+        <!--below some additional languages for translating-->
+        <item>Korean</item>
+        <item>Japanese</item>
+        <item>Chinese Simplified</item>
+        <item>Chinese Traditional</item>
+        <item>Vietnamese</item>
+        <item>Russian</item>
+
+    </string-array>
+    <string-array name="language_code_array">
+        <item>auto</item>
+        <item>ca</item>
+        <item>da</item>
+        <item>nl</item>
+        <item>en</item>
+        <item>fi</item>
+        <item>fr</item>
+        <item>de</item>
+        <item>hu</item>
+        <item>it</item>
+        <item>pl</item>
+        <item>pt</item>
+        <item>ro</item>
+        <item>es</item>
+        <item>sv</item>
+        <item>tr</item>
+        <item>ko</item>
+        <item>ja</item>
+        <item>zh-CN</item>
+        <item>zh-TW</item>
+        <item>vi</item>
+        <item>ru</item>
+    </string-array>
 </resources>

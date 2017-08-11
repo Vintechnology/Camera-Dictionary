@@ -6,30 +6,37 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/colorPrimary"
-        android:orientation="horizontal">
+        android:background="@color/colorPrimary">
 
         <ImageButton
-            android:id="@+id/image_button"
+            android:id="@+id/back_button"
             android:layout_width="?attr/actionBarSize"
             android:layout_height="match_parent"
             android:background="@android:color/transparent"
-            android:padding="10dp"
             app:srcCompat="?attr/homeAsUpIndicator"
             tools:ignore="ContentDescription" />
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_marginStart="10dp"
+            android:layout_toEndOf="@id/back_button"
             android:gravity="center_vertical"
             android:text="@string/google_translate"
             android:textSize="20sp" />
+        <ImageButton
+            android:id="@+id/home_button"
+            android:layout_width="?attr/actionBarSize"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:background="@android:color/transparent"
+            app:srcCompat="@drawable/ic_home_black_24dp"
+            tools:ignore="ContentDescription"/>
 
-    </LinearLayout>
+    </RelativeLayout>
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="match_parent"

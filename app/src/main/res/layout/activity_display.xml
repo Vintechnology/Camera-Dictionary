@@ -12,79 +12,108 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-    <FrameLayout
-        android:id="@+id/content"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-        <ImageView
-            android:id="@+id/image_display"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitCenter"
-            tools:ignore="ContentDescription" />
-        <com.example.user.cameradictionary.CropView
-            android:id="@+id/crop_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:layout_marginTop="@dimen/activity_vertical_margin"
-            android:orientation="vertical"
-            android:background="@color/transGray">
-            <TextView
-                android:id="@+id/result_label"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:labelFor="@+id/result"
-                android:text="@string/crop_instruction"/>
-            <EditText
-                android:id="@+id/result"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textCursorDrawable="@null"
-                android:visibility="gone"
-                android:inputType="textMultiLine|text"/>
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:background="@color/colorPrimary">
+            <Spinner
+                android:id="@+id/detect_language_spinner"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"/>
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/ic_arrow_forward_black_24dp"
+                tools:ignore="ContentDescription" />
+            <Spinner
+                android:id="@+id/translate_language_spinner"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="match_parent"/>
         </LinearLayout>
 
-    </FrameLayout>
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/colorPrimary"
-        android:elevation="4dp"
-        android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/translate_button"
+        <FrameLayout
+            android:id="@+id/content"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:background="@color/colorAccent"
-            android:visibility="gone"
-            app:srcCompat="@drawable/ic_translate_black_24dp"/>
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-        <ImageButton
-            android:id="@+id/back_button"
-            android:layout_width="?attr/actionBarSize"
-            android:layout_height="match_parent"
-            app:srcCompat="?attr/homeAsUpIndicator"
-            android:background="@android:color/transparent"/>
+            <ImageView
+                android:id="@+id/image_display"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                tools:ignore="ContentDescription" />
 
-        <ImageButton
-            android:id="@+id/check_button"
-            android:layout_width="?attr/actionBarSize"
-            android:layout_height="match_parent"
-            android:layout_alignParentEnd="true"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/ic_check_black_24dp"/>
+            <com.example.user.cameradictionary.CropView
+                android:id="@+id/crop_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
-    </RelativeLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_vertical_margin"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_marginRight="@dimen/activity_horizontal_margin"
+                android:layout_marginTop="@dimen/activity_vertical_margin"
+                android:background="@color/transGray"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/result_label"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:labelFor="@+id/result"
+                    android:text="@string/crop_instruction" />
+
+                <EditText
+                    android:id="@+id/result"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textMultiLine|text"
+                    android:textCursorDrawable="@null"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            android:elevation="4dp"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/translate_button"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_translate_black_24dp" />
+
+            <ImageButton
+                android:id="@+id/back_button"
+                android:layout_width="?attr/actionBarSize"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                app:srcCompat="?attr/homeAsUpIndicator" />
+
+            <ImageButton
+                android:id="@+id/check_button"
+                android:layout_width="?attr/actionBarSize"
+                android:layout_height="match_parent"
+                android:layout_alignParentEnd="true"
+                android:background="@android:color/transparent"
+                app:srcCompat="@drawable/ic_check_black_24dp" />
+
+        </RelativeLayout>
     </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>
